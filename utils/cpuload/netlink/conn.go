@@ -18,8 +18,11 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"os"
 	"syscall"
+
+	"github.com/golang/glog"
 )
 
 type Connection struct {
@@ -52,6 +55,7 @@ func newConnection() (*Connection, error) {
 		syscall.Close(fd)
 		return nil, err
 	}
+	glog.V(4).Infof("New Netlink connection: %+v", conn)
 	return conn, err
 }
 
@@ -88,6 +92,10 @@ func (self *Connection) ReadMessage() (msg syscall.NetlinkMessage, err error) {
 	err = binary.Read(self.rbuf, binary.LittleEndian, &msg.Header)
 	if err != nil {
 		return msg, err
+	}
+	if msg.Header.Len == 0 {
+		glog.Errorf("Unexpected netlink header: %+v", msg.Header)
+		return msg, errors.New("Unexpected netlink header")
 	}
 	msg.Data = make([]byte, msg.Header.Len-syscall.NLMSG_HDRLEN)
 	_, err = self.rbuf.Read(msg.Data)

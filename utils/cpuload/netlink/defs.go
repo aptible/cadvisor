@@ -15,12 +15,20 @@
 package netlink
 
 /*
+#include <linux/genetlink.h>
 #include <linux/taskstats.h>
+#include <linux/cgroupstats.h>
 */
 import "C"
 
-type TaskStats C.struct_taskstats
-
 const (
-	__TASKSTATS_CMD_MAX = C.__TASKSTATS_CMD_MAX
+	GENL_ID_CTRL                  = C.GENL_ID_CTRL
+	CTRL_ATTR_FAMILY_ID           = C.CTRL_ATTR_FAMILY_ID
+	CTRL_ATTR_FAMILY_NAME         = C.CTRL_ATTR_FAMILY_NAME
+	CTRL_CMD_GETFAMILY            = C.CTRL_CMD_GETFAMILY
+	TASKSTATS_GENL_NAME           = C.TASKSTATS_GENL_NAME
+	TASKSTATS_GENL_VERSION        = C.TASKSTATS_GENL_VERSION
+	CGROUPSTATS_CMD_GET           = C.CGROUPSTATS_CMD_GET
+	CGROUPSTATS_CMD_ATTR_FD       = C.CGROUPSTATS_CMD_ATTR_FD
+	CGROUPSTATS_TYPE_CGROUP_STATS = C.CGROUPSTATS_TYPE_CGROUP_STATS
 )
