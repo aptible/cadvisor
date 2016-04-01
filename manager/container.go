@@ -27,6 +27,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"runtime/pprof"
+	"os"
 
 	"github.com/google/cadvisor/cache/memory"
 	"github.com/google/cadvisor/collector"
@@ -433,11 +435,26 @@ func (c *containerData) housekeeping() {
 }
 
 func (c *containerData) housekeepingTick() {
-	err := c.updateStats()
-	if err != nil {
-		if c.allowErrorLogging() {
-			glog.Infof("Failed to update stats for container \"%s\": %s", c.info.Name, err)
+	done := make(chan bool, 1)
+
+	go func() {
+		err := c.updateStats()
+		if err != nil {
+			if c.allowErrorLogging() {
+				glog.Infof("Failed to update stats for container \"%s\": %s", c.info.Name, err)
+			}
 		}
+		done <- true
+	}()
+
+	select {
+	case <-done:
+		// Nothing to do
+	case <-time.After(*HousekeepingInterval * 2):
+		// We timed out. Dump all goroutine stacks to facilitate troubleshooting, and panic.
+		glog.Errorf("Housekeeping timed out for container %s", c.info.Name)
+		pprof.Lookup("goroutine").WriteTo(os.Stderr, 1)
+		panic("Aborting!")
 	}
 }
 
