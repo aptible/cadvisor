@@ -34,6 +34,8 @@ const (
 	colCpuCumulativeUsage = "cpu_cumulative_usage"
 	// Memory Usage
 	colMemoryUsage = "memory_usage"
+	// Memory RSS
+	colRSS = "rss"
 	// Working set size
 	colMemoryWorkingSet = "memory_working_set"
 	// Cumulative count of bytes received.
@@ -64,6 +66,9 @@ func (driver *stdoutStorage) containerStatsToValues(stats *info.ContainerStats) 
 
 	// Memory Usage
 	series[colMemoryUsage] = stats.Memory.Usage
+
+	// RSS
+	series[colRSS] = stats.Memory.RSS
 
 	// Working set size
 	series[colMemoryWorkingSet] = stats.Memory.WorkingSet

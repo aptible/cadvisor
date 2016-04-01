@@ -382,7 +382,7 @@ func toContainerStats2(s *cgroups.Stats, ret *info.ContainerStats) {
 	ret.Memory.Usage = s.MemoryStats.Usage.Usage
 	ret.Memory.Failcnt = s.MemoryStats.Usage.Failcnt
 	ret.Memory.Cache = s.MemoryStats.Stats["cache"]
-	ret.Memory.RSS = s.MemoryStats.Stats["rss"]
+	ret.Memory.RSS = s.MemoryStats.Stats["rss"] + s.MemoryStats.Stats["mapped_file"]
 	if v, ok := s.MemoryStats.Stats["pgfault"]; ok {
 		ret.Memory.ContainerData.Pgfault = v
 		ret.Memory.HierarchicalData.Pgfault = v

@@ -55,6 +55,8 @@ const (
 	serLoadAverage string = "load_average"
 	// Memory Usage
 	serMemoryUsage string = "memory_usage"
+	// RSS size
+	serMemoryRSS string = "memory_rss"
 	// Working set size
 	serMemoryWorkingSet string = "memory_working_set"
 	// Cumulative count of bytes received.
@@ -196,8 +198,8 @@ func (self *influxdbStorage) containerStatsToPoints(
 	// Memory Usage
 	points = append(points, makePoint(serMemoryUsage, stats.Memory.Usage))
 
-	// Working Set Size
-	points = append(points, makePoint(serMemoryWorkingSet, stats.Memory.WorkingSet))
+	// RSS
+	points = append(points, makePoint(serMemoryRSS, stats.Memory.RSS))
 
 	// Network Stats
 	points = append(points, makePoint(serRxBytes, stats.Network.RxBytes))
