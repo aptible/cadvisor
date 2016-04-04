@@ -516,7 +516,7 @@ func (c *containerData) updateStats() error {
 				return fmt.Errorf("failed to get load stat for %q - path %q, error %s", c.info.Name, path, err)
 			}
 			stats.TaskStats = loadStats
-			c.updateLoad(loadStats.NrRunning)
+			c.updateLoad(loadStats.NrRunning + loadStats.NrUninterruptible + loadStats.NrIoWait)
 			// convert to 'milliLoad' to avoid floats and preserve precision.
 			stats.Cpu.LoadAverage = int32(c.loadAvg * 1000)
 		}
