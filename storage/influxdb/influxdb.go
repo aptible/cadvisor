@@ -101,6 +101,7 @@ const (
 const (
 	tagMachineName   string = "machine"
 	tagContainerName string = "container_name"
+	tagContainerId   string = "container_id"
 )
 
 func (self *influxdbStorage) containerFilesystemStatsToPoints(
@@ -158,6 +159,7 @@ func (self *influxdbStorage) tagPoints(ref info.ContainerReference, stats *info.
 	commonTags := map[string]string{
 		tagMachineName:   self.machineName,
 		tagContainerName: containerName,
+		tagContainerId:   ref.Name,
 	}
 	for i := 0; i < len(points); i++ {
 		// merge with existing tags if any
