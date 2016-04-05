@@ -520,7 +520,10 @@ func (a *ContainerStats) Eq(b *ContainerStats) bool {
 // Checks equality of the stats values.
 func (a *ContainerStats) StatsEq(b *ContainerStats) bool {
 	// TODO(vmarmol): Consider using this through reflection.
-	if !reflect.DeepEqual(a.Cpu, b.Cpu) {
+	// Exclude Load Average from calculation. Since the Load Average
+	// is adjusted at each run via a calculation that is bound to make
+	// it change over time.
+	if !reflect.DeepEqual(a.Cpu.Usage, b.Cpu.Usage) {
 		return false
 	}
 	if !reflect.DeepEqual(a.Memory, b.Memory) {
