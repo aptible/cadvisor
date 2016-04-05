@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
-	"math/rand"
 	"os"
 	"os/exec"
 	"path"
@@ -48,6 +47,7 @@ import (
 var enableLoadReader = flag.Bool("enable_load_reader", false, "Whether to enable cpu load reader")
 var HousekeepingInterval = flag.Duration("housekeeping_interval", 1*time.Second, "Interval between container housekeepings")
 var LoadreaderInterval = flag.Duration("load_reader_interval", 1*time.Second, "Interval between load reader probes")
+var MaxLoadReaderInterval = flag.Duration("max_load_reader_interval", 60*time.Second, "Interval between load reader probes")
 
 var cgroupPathRegExp = regexp.MustCompile(`devices[^:]*:(.*?)[,;$]`)
 
@@ -71,13 +71,13 @@ type containerData struct {
 	lastErrorTime            time.Time
 
 	// smoothed load average seen so far.
-	loadAvg float64
+	loadAvg              float64
+	loadAvgLastProbeTime time.Time
 	// How often load average should be checked (samples are unreliable by nature)
 	loadreaderInterval time.Duration
 	// Decay value used for load average smoothing. Interval length of 10 seconds is used.
-	loadDecay float64
-	loadStop  chan bool
-	loadLock  sync.Mutex
+	loadStop chan bool
+	loadLock sync.Mutex
 
 	// last taskstats
 	taskStats info.LoadStats
@@ -90,6 +90,14 @@ type containerData struct {
 
 	// Runs custom metric collectors.
 	collectorManager collector.CollectorManager
+}
+
+func DurationMin(d1 time.Duration, d2 time.Duration) time.Duration {
+	if d1 < d2 {
+		return d1
+	}
+
+	return d2
 }
 
 func (c *containerData) Start() error {
@@ -326,9 +334,8 @@ func newContainerData(containerName string, memoryCache *memory.InMemoryCache, h
 		maxHousekeepingInterval:  maxHousekeepingInterval,
 		allowDynamicHousekeeping: allowDynamicHousekeeping,
 		logUsage:                 logUsage,
-		loadAvg:                  -1.0, // negative value indicates uninitialized.
+		loadAvg:                  -1.0, // negative value indicates uninitialized
 		loadreaderInterval:       *LoadreaderInterval,
-		loadDecay:                math.Exp(float64(-(*LoadreaderInterval).Seconds() / 10)),
 		loadStop:                 make(chan bool, 1),
 		stop:                     make(chan bool, 1),
 		collectorManager:         collectorManager,
@@ -360,30 +367,30 @@ func newContainerData(containerName string, memoryCache *memory.InMemoryCache, h
 }
 
 // Determine when the next housekeeping should occur.
-func (self *containerData) nextHousekeeping(lastHousekeeping time.Time) time.Time {
-	if self.allowDynamicHousekeeping {
-		var empty time.Time
-		stats, err := self.memoryCache.RecentStats(self.info.Name, empty, empty, 2)
-		if err != nil {
-			if self.allowErrorLogging() {
-				glog.Warningf("Failed to get RecentStats(%q) while determining the next housekeeping: %v", self.info.Name, err)
-			}
-		} else if len(stats) == 2 {
-			// TODO(vishnuk): Use no processes as a signal.
-			// Raise the interval if usage hasn't changed in the last housekeeping.
-			if stats[0].StatsEq(stats[1]) && (self.housekeepingInterval < self.maxHousekeepingInterval) {
-				self.housekeepingInterval *= 2
-				if self.housekeepingInterval > self.maxHousekeepingInterval {
-					self.housekeepingInterval = self.maxHousekeepingInterval
-				}
-			} else if self.housekeepingInterval != *HousekeepingInterval {
-				// Lower interval back to the baseline.
-				self.housekeepingInterval = *HousekeepingInterval
-			}
-		}
+func (c *containerData) adjustHousekeepingInterval() error {
+	if !c.allowDynamicHousekeeping {
+		return nil
 	}
 
-	return lastHousekeeping.Add(utils.Jitter(self.housekeepingInterval, 1.0))
+	var empty time.Time
+	stats, err := c.memoryCache.RecentStats(c.info.Name, empty, empty, 2)
+	if err != nil {
+		return err
+	}
+
+	if len(stats) < 2 {
+		// Not enough stats yet to adjust housekeeping interval
+		return nil
+	}
+
+	if stats[0].StatsEq(stats[1]) {
+		c.housekeepingInterval = DurationMin(c.housekeepingInterval*2, c.maxHousekeepingInterval)
+	} else {
+		// Lower interval back to the baseline.
+		c.housekeepingInterval = *HousekeepingInterval
+	}
+
+	return nil
 }
 
 // TODO(vmarmol): Implement stats collecting as a custom collector.
@@ -453,7 +460,11 @@ func (c *containerData) doHousekeepingLoop() {
 			}
 		}
 
-		next := c.nextHousekeeping(lastHousekeeping)
+		err := c.adjustHousekeepingInterval()
+		if err != nil && c.allowErrorLogging() {
+			glog.Warningf("Failed to get RecentStats(%q) while determining the next housekeeping: %v", c.info.Name, err)
+		}
+		next := lastHousekeeping.Add(utils.Jitter(c.housekeepingInterval, 1.0))
 
 		// Schedule the next housekeeping. Sleep until that time.
 		if time.Now().Before(next) {
@@ -518,15 +529,19 @@ func (c *containerData) updateSpec() error {
 // Calculate new smoothed load average using the new sample of runnable threads.
 // The decay used ensures that the load will stabilize on a new constant value within
 // 10 seconds.
-func (c *containerData) updateLoadAvg(newLoad uint64) {
+func (c *containerData) updateLoadAvg(probeTime time.Time, newTaskStats info.LoadStats) {
 	c.loadLock.Lock()
 	defer c.loadLock.Unlock()
 
+	newLoad := newTaskStats.NrRunning + newTaskStats.NrUninterruptible + newTaskStats.NrIoWait
 	if c.loadAvg < 0 {
-		c.loadAvg = float64(newLoad) // initialize to the first seen sample for faster stabilization.
+		// We never saw a load average, just record this as the new authoritative value
+		c.loadAvg = float64(newLoad)
 	} else {
-		c.loadAvg = c.loadAvg*c.loadDecay + float64(newLoad)*(1.0-c.loadDecay)
+		loadDecay := math.Exp(float64(-(probeTime.Sub(c.loadAvgLastProbeTime).Seconds() / 10)))
+		c.loadAvg = float64(newLoad)*(1.0-loadDecay) + c.loadAvg*loadDecay
 	}
+	c.loadAvgLastProbeTime = probeTime
 }
 
 func (c *containerData) LoadAvg() float64 {
@@ -553,12 +568,20 @@ func (c *containerData) TaskStats() info.LoadStats {
 func (c *containerData) doLoadReaderIteration() error {
 	path, err := c.handler.GetCgroupPath("cpu")
 	if err == nil {
-		taskStats, err := c.loadReader.GetCpuLoad(c.info.Name, path)
+		newTaskStats, err := c.loadReader.GetCpuLoad(c.info.Name, path)
+		probeTime := time.Now()
 		if err != nil {
 			return fmt.Errorf("failed to get load stat for %q - path %q, error %s", c.info.Name, path, err)
 		}
-		c.updateLoadAvg(taskStats.NrRunning + taskStats.NrUninterruptible + taskStats.NrIoWait)
-		c.updateTaskStats(taskStats)
+		// Check whether we should backoff before updating task stats
+		if c.allowDynamicHousekeeping && c.TaskStats() == newTaskStats {
+			c.loadreaderInterval = DurationMin(c.loadreaderInterval*2, *MaxLoadReaderInterval)
+		} else {
+			c.loadreaderInterval = *LoadreaderInterval
+		}
+
+		c.updateTaskStats(newTaskStats)
+		c.updateLoadAvg(probeTime, newTaskStats)
 	}
 
 	return nil
@@ -576,11 +599,11 @@ func (c *containerData) doLoadReaderLoop() {
 		case <-c.loadStop:
 			return
 		default:
-			c.doWithTimeout((*containerData).doLoadReaderIteration, (c.loadreaderInterval)*2)
+			c.doWithTimeout((*containerData).doLoadReaderIteration, (*LoadreaderInterval)*2)
 		}
 
 		// Schedule the next housekeeping. Sleep until that time.
-		next := lastIteration.Add(jitter(c.loadreaderInterval, 1.0))
+		next := lastIteration.Add(utils.Jitter(c.loadreaderInterval, 1.0))
 
 		if time.Now().Before(next) {
 			time.Sleep(next.Sub(time.Now()))
