@@ -73,6 +73,10 @@ const (
 	serFsLimit string = "fs_limit"
 	// Filesystem usage.
 	serFsUsage string = "fs_usage"
+	// Serviced IO bytes
+	serIoBytes string = "io_bytes"
+	// Serviced IO operations
+	serIoOps string = "io_ops"
 )
 
 func new() (storage.StorageDriver, error) {
@@ -200,6 +204,22 @@ func (self *influxdbStorage) containerStatsToPoints(
 
 	// RSS
 	points = append(points, makePoint(serMemoryRSS, stats.Memory.RSS))
+
+	// IO stats
+	var readBytes, writeBytes, readOps, writeOps uint64 = 0, 0, 0, 0
+
+	for _, diskStats := range stats.DiskIo.IoServiceBytes {
+		readBytes += diskStats.Stats["Read"]
+		writeBytes += diskStats.Stats["Write"]
+	}
+
+	for _, diskStats := range stats.DiskIo.IoServiced {
+		readOps += diskStats.Stats["Read"]
+		writeOps += diskStats.Stats["Write"]
+	}
+
+	points = append(points, makePoint(serIoBytes, readBytes+writeBytes))
+	points = append(points, makePoint(serIoOps, readOps+writeOps))
 
 	// Network Stats
 	points = append(points, makePoint(serRxBytes, stats.Network.RxBytes))
