@@ -132,7 +132,7 @@ func New(memoryCache *memory.InMemoryCache, sysfs sysfs.SysFs, maxHousekeepingIn
 
 	dockerInfo, err := dockerInfo()
 	if err != nil {
-		glog.Warningf("Unable to connect to Docker: %v", err)
+		glog.Fatalf("Unable to connect to Docker: %v", err)
 	}
 	rktPath, err := rkt.RktPath()
 	if err != nil {
@@ -218,7 +218,7 @@ type manager struct {
 func (self *manager) Start() error {
 	err := docker.Register(self, self.fsInfo, self.ignoreMetrics)
 	if err != nil {
-		glog.Errorf("Docker container factory registration failed: %v.", err)
+		glog.Fatalf("Docker container factory registration failed: %v.", err)
 	}
 
 	err = rkt.Register(self, self.fsInfo, self.ignoreMetrics)
