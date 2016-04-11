@@ -77,9 +77,10 @@ func (self *RealPartitionCache) Refresh() error {
 
 	supportedFsType := map[string]bool{
 		// all ext systems are checked through prefix.
-		"btrfs": true,
-		"xfs":   true,
-		"zfs":   true,
+		"btrfs":    true,
+		"xfs":      true,
+		"zfs":      true,
+		"ecryptfs": true,
 	}
 
 	mounts, err := self.mountInfo.GetMounts()
