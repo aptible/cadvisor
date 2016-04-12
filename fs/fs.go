@@ -142,7 +142,11 @@ func (self *RealFsInfo) getFilteredFsInfo(filter func(_ string, _ partition) boo
 		for _, fs := range filesystemsOut {
 			diskStats, ok := diskStatsMap[fs.DeviceInfo.Device]
 			if !ok {
-				glog.Errorf("Disk stats for %q not found", fs.DeviceInfo.Device)
+				// TODO: ecryptfs breaks with this, since the disk stats we should
+				// report are the disk stats for the underlying physical volume, not
+				// the ecryptfs one. We should (probably) handle ecryptfs a little
+				// differently here, and look at the disk stats for the lower layer.
+				// glog.Warningf("Disk stats for %q not found", fs.DeviceInfo.Device)
 				continue
 			}
 			fs.DiskStats = diskStats
