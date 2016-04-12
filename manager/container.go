@@ -44,10 +44,13 @@ import (
 )
 
 // Housekeeping interval.
-var enableLoadReader = flag.Bool("enable_load_reader", false, "Whether to enable cpu load reader")
 var HousekeepingInterval = flag.Duration("housekeeping_interval", 1*time.Second, "Interval between container housekeepings")
+
+var enableLoadReader = flag.Bool("enable_load_reader", false, "Whether to enable cpu load reader")
 var LoadreaderInterval = flag.Duration("load_reader_interval", 1*time.Second, "Interval between load reader probes")
 var MaxLoadReaderInterval = flag.Duration("max_load_reader_interval", 60*time.Second, "Interval between load reader probes")
+
+var PanicTimeout = flag.Duration("panic_timeout", 1*time.Minute, "Delay after which cAdvisor should panic if housekeeping or LA probe hasn't completed")
 
 var cgroupPathRegExp = regexp.MustCompile(`devices[^:]*:(.*?)[,;$]`)
 
@@ -424,7 +427,7 @@ func (c *containerData) doHousekeepingLoop() {
 		default:
 			// Perform housekeeping.
 			start := time.Now()
-			c.doWithTimeout((*containerData).updateStats, (*HousekeepingInterval)*2)
+			c.doWithTimeout((*containerData).updateStats, *PanicTimeout)
 
 			// Log if housekeeping took too long.
 			duration := time.Since(start)
@@ -599,7 +602,7 @@ func (c *containerData) doLoadReaderLoop() {
 		case <-c.loadStop:
 			return
 		default:
-			c.doWithTimeout((*containerData).doLoadReaderIteration, (*LoadreaderInterval)*2)
+			c.doWithTimeout((*containerData).doLoadReaderIteration, *PanicTimeout)
 		}
 
 		// Schedule the next housekeeping. Sleep until that time.
