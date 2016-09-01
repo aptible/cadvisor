@@ -56,13 +56,11 @@ func NewFsInfo(context Context) (FsInfo, error) {
 		fsStatsCache:   NewFsStatsCache(),
 	}
 
-	partitions := make([]partition, 0)
-	fsInfo.partitionCache.ApplyOverPartitions(func(_ string, p partition) error {
-		partitions = append(partitions, p)
+	glog.Infof("Listing filesystem partitions:")
+	fsInfo.partitionCache.ApplyOverPartitions(func(d string, p partition) error {
+		glog.Infof("%s: %+v", d, p)
 		return nil
 	})
-
-	glog.Infof("Filesystem partitions: %+v", partitions)
 
 	return fsInfo, nil
 }
