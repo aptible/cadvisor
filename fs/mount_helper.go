@@ -18,6 +18,7 @@ package fs
 
 import (
 	dockerMountInfo "github.com/docker/docker/pkg/mount"
+	"path/filepath"
 )
 
 type mountInfoClient interface {
@@ -27,7 +28,22 @@ type mountInfoClient interface {
 type defaultMountInfoClient struct{}
 
 func (*defaultMountInfoClient) GetMounts() ([]*dockerMountInfo.Info, error) {
-	return dockerMountInfo.GetMounts()
+	mounts, err := dockerMountInfo.GetMounts()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, mount := range mounts {
+		// Dereference the device name to account for symlinks (e.g. /dev/disk/by-uuid/...)
+		// Not all mounts can be de-referenced though, so we skip silently mounts that cannot.
+		deviceName, err := filepath.EvalSymlinks(mount.Source)
+		if err != nil {
+			continue
+		}
+		mount.Source = deviceName
+	}
+
+	return mounts, nil
 }
 
 var _ mountInfoClient = &defaultMountInfoClient{}
