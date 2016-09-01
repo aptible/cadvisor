@@ -1,6 +1,7 @@
 {
 	"ImportPath": "github.com/google/cadvisor",
 	"GoVersion": "go1.5.3",
+	"GodepVersion": "v74",
 	"Packages": [
 		"./..."
 	],
@@ -154,75 +155,75 @@
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",
-			"Rev": "ff3d4ee4753705a048db1855113026395c26a79a"
+			"Rev": "f30651f746f9462eb58f7233eefc587ceecd0f9f"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/Sirupsen/logrus",
-			"Rev": "ff3d4ee4753705a048db1855113026395c26a79a"
+			"Rev": "f30651f746f9462eb58f7233eefc587ceecd0f9f"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/opts",
-			"Rev": "ff3d4ee4753705a048db1855113026395c26a79a"
+			"Rev": "f30651f746f9462eb58f7233eefc587ceecd0f9f"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/archive",
-			"Rev": "ff3d4ee4753705a048db1855113026395c26a79a"
+			"Rev": "f30651f746f9462eb58f7233eefc587ceecd0f9f"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/fileutils",
-			"Rev": "ff3d4ee4753705a048db1855113026395c26a79a"
+			"Rev": "f30651f746f9462eb58f7233eefc587ceecd0f9f"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/homedir",
-			"Rev": "ff3d4ee4753705a048db1855113026395c26a79a"
+			"Rev": "f30651f746f9462eb58f7233eefc587ceecd0f9f"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/idtools",
-			"Rev": "ff3d4ee4753705a048db1855113026395c26a79a"
+			"Rev": "f30651f746f9462eb58f7233eefc587ceecd0f9f"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/ioutils",
-			"Rev": "ff3d4ee4753705a048db1855113026395c26a79a"
+			"Rev": "f30651f746f9462eb58f7233eefc587ceecd0f9f"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/longpath",
-			"Rev": "ff3d4ee4753705a048db1855113026395c26a79a"
+			"Rev": "f30651f746f9462eb58f7233eefc587ceecd0f9f"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/pools",
-			"Rev": "ff3d4ee4753705a048db1855113026395c26a79a"
+			"Rev": "f30651f746f9462eb58f7233eefc587ceecd0f9f"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/promise",
-			"Rev": "ff3d4ee4753705a048db1855113026395c26a79a"
+			"Rev": "f30651f746f9462eb58f7233eefc587ceecd0f9f"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/stdcopy",
-			"Rev": "ff3d4ee4753705a048db1855113026395c26a79a"
+			"Rev": "f30651f746f9462eb58f7233eefc587ceecd0f9f"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/system",
-			"Rev": "ff3d4ee4753705a048db1855113026395c26a79a"
+			"Rev": "f30651f746f9462eb58f7233eefc587ceecd0f9f"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/go-units",
-			"Rev": "ff3d4ee4753705a048db1855113026395c26a79a"
+			"Rev": "f30651f746f9462eb58f7233eefc587ceecd0f9f"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/hashicorp/go-cleanhttp",
-			"Rev": "ff3d4ee4753705a048db1855113026395c26a79a"
+			"Rev": "f30651f746f9462eb58f7233eefc587ceecd0f9f"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/opencontainers/runc/libcontainer/user",
-			"Rev": "ff3d4ee4753705a048db1855113026395c26a79a"
+			"Rev": "f30651f746f9462eb58f7233eefc587ceecd0f9f"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient/external/golang.org/x/net/context",
-			"Rev": "ff3d4ee4753705a048db1855113026395c26a79a"
+			"Rev": "f30651f746f9462eb58f7233eefc587ceecd0f9f"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient/external/golang.org/x/sys/unix",
-			"Rev": "ff3d4ee4753705a048db1855113026395c26a79a"
+			"Rev": "f30651f746f9462eb58f7233eefc587ceecd0f9f"
 		},
 		{
 			"ImportPath": "github.com/garyburd/redigo/internal",
