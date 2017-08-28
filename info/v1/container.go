@@ -280,6 +280,10 @@ type CpuUsage struct {
 	// Time spent in kernel space.
 	// Unit: nanoseconds
 	System uint64 `json:"system"`
+
+	// Time spent throttled
+	// Unit: nanoseconds
+	Throttled uint64 `json:"throttled"`
 }
 
 // All CPU usage metrics are cumulative from the creation of the container

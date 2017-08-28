@@ -357,9 +357,10 @@ func DiskStatsCopy(blkio_stats []cgroups.BlkioStatEntry) (stat []info.PerDiskSta
 func toContainerStats0(s *cgroups.Stats, ret *info.ContainerStats) {
 	ret.Cpu.Usage.User = s.CpuStats.CpuUsage.UsageInUsermode
 	ret.Cpu.Usage.System = s.CpuStats.CpuUsage.UsageInKernelmode
+	ret.Cpu.Usage.Throttled = s.CpuStats.ThrottlingData.ThrottledTime
+
 	n := len(s.CpuStats.CpuUsage.PercpuUsage)
 	ret.Cpu.Usage.PerCpu = make([]uint64, n)
-
 	ret.Cpu.Usage.Total = 0
 	for i := 0; i < n; i++ {
 		ret.Cpu.Usage.PerCpu[i] = s.CpuStats.CpuUsage.PercpuUsage[i]

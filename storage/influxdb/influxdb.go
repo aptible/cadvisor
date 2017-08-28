@@ -51,6 +51,7 @@ const (
 	serCpuUsageSystem string = "cpu_usage_system"
 	serCpuUsageUser   string = "cpu_usage_user"
 	serCpuUsagePerCpu string = "cpu_usage_per_cpu"
+	serCpuThrottled   string = "cpu_throttled"
 	// Smoothed average of number of runnable threads x 1000.
 	serLoadAverage string = "load_average"
 	// Memory Usage
@@ -186,6 +187,9 @@ func (self *influxdbStorage) containerStatsToPoints(
 
 	// CPU usage: Time spent in user space (in nanoseconds)
 	points = append(points, makePoint(serCpuUsageUser, stats.Cpu.Usage.User))
+
+	// CPU usage: Time throttled (in nanoseconds)
+	points = append(points, makePoint(serCpuThrottled, stats.Cpu.Usage.Throttled))
 
 	// CPU usage per CPU
 	for i := 0; i < len(stats.Cpu.Usage.PerCpu); i++ {
