@@ -50,7 +50,6 @@ const (
 	serCpuUsageTotal  string = "cpu_usage_total"
 	serCpuUsageSystem string = "cpu_usage_system"
 	serCpuUsageUser   string = "cpu_usage_user"
-	serCpuUsagePerCpu string = "cpu_usage_per_cpu"
 	serCpuThrottled   string = "cpu_throttled"
 	// Smoothed average of number of runnable threads x 1000.
 	serLoadAverage string = "load_average"
@@ -99,16 +98,13 @@ func new() (storage.StorageDriver, error) {
 
 // Field names
 const (
-	fieldValue  string = "value"
-	fieldType   string = "type"
-	fieldDevice string = "device"
+	fieldValue string = "value"
 )
 
 // Tag names
 const (
-	tagMachineName   string = "machine"
-	tagContainerName string = "container_name"
-	tagContainerId   string = "container_id"
+	tagContainerId string = "container_id"
+	tagDevice      string = "device"
 )
 
 func (self *influxdbStorage) containerFilesystemStatsToPoints(
@@ -119,8 +115,7 @@ func (self *influxdbStorage) containerFilesystemStatsToPoints(
 	}
 	for _, fsStat := range stats.Filesystem {
 		tagsFsUsage := map[string]string{
-			fieldDevice: fsStat.Device,
-			fieldType:   "usage",
+			tagDevice: fsStat.Device,
 		}
 		fieldsFsUsage := map[string]interface{}{
 			fieldValue: int64(fsStat.Usage),
@@ -132,8 +127,7 @@ func (self *influxdbStorage) containerFilesystemStatsToPoints(
 		}
 
 		tagsFsLimit := map[string]string{
-			fieldDevice: fsStat.Device,
-			fieldType:   "limit",
+			tagDevice: fsStat.Device,
 		}
 		fieldsFsLimit := map[string]interface{}{
 			fieldValue: int64(fsStat.Limit),
@@ -155,19 +149,10 @@ func (self *influxdbStorage) containerFilesystemStatsToPoints(
 // Set tags and timestamp for all points of the batch.
 // Points should inherit the tags that are set for BatchPoints, but that does not seem to work.
 func (self *influxdbStorage) tagPoints(ref info.ContainerReference, stats *info.ContainerStats, points []*influxdb.Point) {
-	// Use container alias if possible
-	var containerName string
-	if len(ref.Aliases) > 0 {
-		containerName = ref.Aliases[0]
-	} else {
-		containerName = ref.Name
+	commonTags := map[string]string{
+		tagContainerId: ref.Name,
 	}
 
-	commonTags := map[string]string{
-		tagMachineName:   self.machineName,
-		tagContainerName: containerName,
-		tagContainerId:   ref.Name,
-	}
 	for i := 0; i < len(points); i++ {
 		// merge with existing tags if any
 		addTagsToPoint(points[i], commonTags)
@@ -190,15 +175,6 @@ func (self *influxdbStorage) containerStatsToPoints(
 
 	// CPU usage: Time throttled (in nanoseconds)
 	points = append(points, makePoint(serCpuThrottled, stats.Cpu.Usage.Throttled))
-
-	// CPU usage per CPU
-	for i := 0; i < len(stats.Cpu.Usage.PerCpu); i++ {
-		point := makePoint(serCpuUsagePerCpu, stats.Cpu.Usage.PerCpu[i])
-		tags := map[string]string{"instance": fmt.Sprintf("%v", i)}
-		addTagsToPoint(point, tags)
-
-		points = append(points, point)
-	}
 
 	// Load Average
 	points = append(points, makePoint(serLoadAverage, stats.Cpu.LoadAverage))
@@ -268,11 +244,9 @@ func (self *influxdbStorage) AddStats(ref info.ContainerReference, stats *info.C
 			points[i] = *p
 		}
 
-		batchTags := map[string]string{tagMachineName: self.machineName}
 		bp := influxdb.BatchPoints{
 			Points:   points,
 			Database: self.database,
-			Tags:     batchTags,
 			Time:     stats.Timestamp,
 		}
 		response, err := self.client.Write(bp)
