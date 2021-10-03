@@ -1,12 +1,23 @@
-language: go
+language: generic
 sudo: false
-go:
- - 1.5.3
-install:
- - true
-before_script:
- - go get golang.org/x/tools/cmd/vet
- - go get github.com/kr/godep
+services:
+- docker
+env:
+  global:
+  - CONTAINER_MOUNT=/build/out
 script:
- - export PATH=$PATH:$HOME/gopath/bin
- - ./build/presubmit.sh
+- docker build . --pull -t cadvisor:build
+- docker run -it -v "${TRAVIS_BUILD_DIR}/s3_deploy:${CONTAINER_MOUNT}" -e DEPLOY_TO="${CONTAINER_MOUNT}/${TRAVIS_REPO_SLUG}/${TRAVIS_BRANCH}" cadvisor:build ./.docker/build.sh
+deploy:
+  skip_cleanup: true
+  provider: s3
+  bucket: aptible-cadvisor
+  acl: private
+  local_dir: s3_deploy
+  access_key_id:
+    secure: nHpvQ855yox/6wg44G5IFjmjCoQ4NieoUfdOoxBYNNdrZZ2c/gzPisCk4oQsOD7Kct1WrKk8NOWUF05vBHO7Zzf3WHp/7cHhHZbUnNHUw2mjQFDq9Xr4+cNzdYT8cxhmeRaFMEJXfUfajV+Na0+gcOuqJCwV40HcMsIa3Cbfjn9XLK1ZfMYSfER30eoVzqqxX6oMoHYwW4i0Ohv55x9/xOUHqyKkgQcE3dcrDAV+qkkK4jU4t3s6HHwZBzRkc6m9k71K2WUeYFS9oHxG74oqK+9lAc5QCtcaF4WNrWP1FblhM5lb+IDL5W0jpNAZU25YIdK8jcm+gNfbTCa7pgmmF0rtX1wNK9P/8StZ/1SbYItf+HSCVzanvStIU3ixVe4uiLXT7LiGkeO4ElSRysqZMWHPg013E2nyXci68cXsORiwZ7QVomAwfPu2KggR+N8dABvs/sge5DWwIgfEskMNNCSnru4AtxUfxk6jYEwfNBqstM8upsXdEbjGR4738nNsjCUiwW6gQMvcNtCB2E5G1fJ7vqNw/Lfx8VMYYlzLzI6rc06sYe7TidghuUgLcbf8W9flZTMtvYrHg+hnppaYgr+ZEmMrTuVFPe1NtCQ6xfsCKYMFsyhAZaDBCDbjKaLKCA6vbt+aghQmoNWJJcoMOBQ7wxQC0N/LOuuiZiEWYkA=
+  secret_access_key:
+    secure: pTVwDMQpZ/Ae1zMxWRgaFvJ6J6yOMFmwk88qQfZeUQyW/MR+LrwL1yxGU8g+E1bxRUWqDwIPzwXeLCvdXtnPza2nWsWJ5FoRx8q4jOucC48mINK+5EUA09y7LJDxrU0CP3c29tIw/och74OrKkiK5dpLY4ZxMov+FQU4TrZf94OYMytm1flZlT9jOjD1SBCgslz5qFTbNtXjwMHBpCAE4fQfNsZEXYSQFsPJVPfz3E7eNu/Jm8ZVgKfqO/rFhRXKqjG6SLTT7fBFQ6OZcNn1JrJ+eo1cNq8vzTh+y7ZG2kRP4JvXzPnSO4M4iUIX11WY/aKyoJ0bd6Z3vVxLtr8RJBlkL30jQa8A4fA5Nb3zkZvr3oOXWCsICPnCxj3zCKvvaLjBTABiyFTO/L5tZ+f8WuFIYIaGcvEucYvRcoYO16y2XFHj5+EJBmawNuq7JkapAn8sHjviXjn5aycG8VozXiqCc//d12S64TBpUqzA+cnE8NwPCqz9J9ufcSqE72xPuSbfbjivF9kcHuhN0n4Tvlj5mvRzX9/LB8CNgo7Tt+fBKymqDYw2Bf/fmr0hpT8bJDAbWdjWCJm3LRe6+iARJ4BvAlbxXPRK7kSC2jk5xC4ExJUbs/9+KOpOWvtLUu94UZVKUyPglKAU7MiCVGVaDnbhFinerdtCVbx75tYwJmA=
+  on:
+    repo: aptible/cadvisor
+    all_branches: true

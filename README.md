@@ -2,11 +2,30 @@
 
 Aptible's own fork of cAdvisor with patches to add additional tags and metrics.
 
-## Build
+## Development
 
-A Dockerfile is included to make building and testing. The Dockerfile is used by CI to build the image as well.
+1. Install `go`. cAdvisor is built using v1.6 but this version is no longer supported so you may need to install a newer version, e.g. 1.17.
 
-The following commands will build the image and build cadvisor in the container the same way CI does.
+   ```shell
+   brew install go@1.17
+   ```
+
+2. Install dependencies
+
+   ```shell
+   GO111MODULE=off go get github.com/tools/godep
+   GO111MODULE=off godep get
+   ```
+
+3. Add the project's workspace, `Godeps/_workspace`, to your `GOPATH`.
+
+At this point you should be ready to contribute to the project.
+
+## Test & Build
+
+A Dockerfile is included to make testing and building cAdvisor easier. The Dockerfile is used by CI to build the image as well.
+
+The following commands will build the image and test and build cAdvisor in the container the same way CI does.
 
 ```shell
 docker build . -t cadvisor:build

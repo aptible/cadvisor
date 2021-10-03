@@ -3,9 +3,7 @@ FROM quay.io/aptible/ubuntu:12.04
 RUN apt-install git build-essential curl
 
 ENV BUILD_DIR="/build"
-
-ARG DEPLOY_TO="${BUILD_DIR}/out"
-ENV DEPLOY_TO="$DEPLOY_TO"
+ENV DEPLOY_TO="${BUILD_DIR}/out"
 
 ENV GODIST="${BUILD_DIR}/godist"
 ENV GOROOT="${GODIST}/go"
