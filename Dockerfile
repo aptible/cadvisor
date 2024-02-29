@@ -21,13 +21,10 @@ WORKDIR "$BUILD_DIR"
 
 RUN curl -fsSL "$GOLANG_DOWNLOAD_URL" -o golang.tar.gz && \
     echo "$GOLANG_DOWNLOAD_SHA256  golang.tar.gz" | sha256sum -c - && \
-
     mkdir -p "$GODIST" && \
     tar -C "$GODIST" -xzf golang.tar.gz && \
     rm golang.tar.gz && \
-
-    # Get Go build dependencies
-    go get github.com/tools/godep
+    go get github.com/tools/godep # Get Go build dependencies
 
 WORKDIR "$CADVISOR_DIR"
 
