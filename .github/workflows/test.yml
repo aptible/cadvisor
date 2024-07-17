@@ -1,0 +1,35 @@
+name: Test build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test-build:
+    name: Build and Publish
+    runs-on: ubuntu-20.04
+    env:
+      CONTAINER_MOUNT: /build/out
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build container
+        run: docker build . --pull -t cadvisor:build
+
+      - name: Build cadvisor
+        run: |
+          mkdir s3_deploy
+          docker run -t \
+            -v "./s3_deploy:${CONTAINER_MOUNT}" \
+            -e DEPLOY_TO="${CONTAINER_MOUNT}/${{ env.GITHUB_REPOSITORY }}/${{ github.head_ref || github.ref_name }}" \
+            cadvisor:build ./.docker/build.sh
+      - name: Check for build artifact
+        run: |
+          find s3_deploy
+          find s3_deploy -type f -name cadvisor
+          find s3_deploy -type f -name cadvisor.sha1sum
