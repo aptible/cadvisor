@@ -1,6 +1,9 @@
-FROM quay.io/aptible/ubuntu:12.04
+FROM --platform=linux/amd64 ubuntu:12.04
 
-RUN apt-install git build-essential curl
+# Yes, 12.04 is mega-deprecated, so we have to fix the apt configuration
+RUN sed -i.bak -r 's/(archive|security).ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
+
+RUN apt-get update && apt-get install -y git build-essential curl
 
 ENV BUILD_DIR="/build"
 ENV DEPLOY_TO="${BUILD_DIR}/out"
