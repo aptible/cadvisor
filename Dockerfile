@@ -1,4 +1,5 @@
 FROM quay.io/aptible/ubuntu:12.04
+# Canary change
 
 RUN apt-install git build-essential curl
 
